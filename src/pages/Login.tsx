@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { SyncLoader } from 'react-spinners';
+import { loginApi } from '../api/userApi';
+import { useDispatch } from 'react-redux';
+import { userLogin } from '../Redux/userSlice';
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email. Please enter a valid email address."),
@@ -17,12 +21,38 @@ const loginSchema = z.object({
 type ILogin = z.infer<typeof loginSchema>;
 
 const Login: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<ILogin>({
+
+  const [loading,setLoading] = useState(false)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
+  const { register, setError, handleSubmit, formState: { errors } } = useForm<ILogin>({
     resolver: zodResolver(loginSchema)
   });
 
-  const onSubmit = (data: ILogin) => {
-    console.log(data); // Handle login logic here
+  const onSubmit = async (data: ILogin) => {
+    try {
+      setLoading(true)
+      const formData = { email: data.email, password: data.password }
+      const response = await loginApi(formData)
+      if (response?.data.status) {
+        setLoading(false)
+        dispatch(userLogin(response.data.data))
+        navigate("/")
+      }
+    } catch (error: any) {
+      setLoading(false)
+      if (!error.response.data.status) {
+        const errorMessages = error.response.data.message
+        for (const [field, message] of Object.entries(errorMessages)) {
+          setError(field as keyof ILogin, {
+            type: 'manual',
+            message: message as any
+          });
+        }
+
+      }
+    }
   };
 
   return (
@@ -52,7 +82,7 @@ const Login: React.FC = () => {
             type="submit"
             className="w-full py-2 px-4 bg-white text-gray-900 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition duration-300"
           >
-            Login
+            {loading ? <SyncLoader speedMultiplier={1} color='#ffffff' margin={1} size={5} /> : "Login"}
           </button>
         </form>
         <p className="mt-4 text-center text-gray-300">

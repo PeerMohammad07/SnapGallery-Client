@@ -1,8 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import * as z from "zod"
+import { registerApi } from '../api/userApi';
+import { SyncLoader } from 'react-spinners';
 
 const registerSchema = z
   .object({
@@ -44,12 +46,38 @@ const registerSchema = z
 type IRegisterSchema = z.infer<typeof registerSchema>
 
 const Register: React.FC = () => {
-  const { formState: { errors }, handleSubmit, register } = useForm<IRegisterSchema>({
+
+  const [loading,setLoading] = useState(false)
+  const navigate = useNavigate()
+
+
+  const { formState: { errors },setError,  handleSubmit, register } = useForm<IRegisterSchema>({
     resolver: zodResolver(registerSchema)
   });
 
-  const onSubmit = (data: IRegisterSchema) => {
-    console.log(data); // Handle form submission here
+
+  const onSubmit = async (data: IRegisterSchema) => {
+    try {
+      setLoading(true)
+      const formData = {name:data.name,phone:data.phone,email:data.email,password:data.password}
+      const response = await registerApi(formData)
+      if(response?.data.status){
+        setLoading(false)
+        navigate("/login")
+      }
+    } catch (error:any) {
+      setLoading(false)
+      if(!error.response.data.status){
+        const errorMessages = error.response.data.message 
+        for (const [field, message] of Object.entries(errorMessages)) {
+          setError(field as keyof IRegisterSchema, {
+            type: 'manual',
+            message : message as any
+          });
+        }
+
+      }
+    }
   };
 
   return (
@@ -106,7 +134,7 @@ const Register: React.FC = () => {
             type="submit"
             className="w-full py-2 px-4 bg-white text-gray-900 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition duration-300"
           >
-            Signup
+            {loading ? <SyncLoader speedMultiplier={1} color='#ffffff' margin={1} size={5} /> :"Signup"}
           </button>
         </form>
         <p className="mt-4 text-center text-gray-300">
