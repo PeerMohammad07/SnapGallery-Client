@@ -17,7 +17,9 @@ const registerSchema = z
     email: z
       .string()
       .trim()
-      .email("Invalid email. Email must be a valid email address"),
+      .email("Invalid email. Email must be a valid email address")
+      .max(254, "Email must not exceed 254 characters") 
+      .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format"), 
     phone: z
       .string()
       .length(10, "Phone number must be exactly 10 digits")

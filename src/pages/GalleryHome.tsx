@@ -24,7 +24,6 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { SortableItem } from './Item';
-import { HiEye, HiPencil, HiTrash } from 'react-icons/hi';
 
 interface Image {
   _id: string;
@@ -38,17 +37,39 @@ const GalleryHome: React.FC = () => {
   const userData = useSelector((prev: rootState) => prev.user.userData);
   const [editImageModalOpen, setEditImageModalOpen] = useState(false);
   const [editImage, setEditImage] = useState<Image | null>(null);
+  const [isLoading, setIsLoading] = useState(false)
+
 
   useEffect(() => {
-    const fetchImages = async () => {
-      if (!userData) return;
-      const response = await getAllImages(userData?._id);
-      const sortedImages = response.data.data.sort((a: any, b: any) => a.order - b.order);
-      console.log(sortedImages)
-      setImages(sortedImages);
-    };
     fetchImages();
   }, [userData]);
+
+  const fetchImages = async () => {
+    if (!userData) return;
+   try {
+    setIsLoading(true)
+    const response = await getAllImages(userData?._id);
+    const sortedImages = response.data.data.sort((a: any, b: any) => a.order - b.order);
+    setImages(sortedImages);
+    setIsLoading(false)
+   } catch (error) {
+     setIsLoading(false)
+    console.log(error)
+   }
+  };
+
+  const onUpload = (response: any) => {
+    try {
+      if (response.data.status) {
+        setImages((prevImages) => [...prevImages, ...response.data.data])
+        toast.success(response.data.message)
+      } else {
+        toast.error(response.data.message)
+      }
+    } catch (error) {
+
+    }
+  }
 
   const onClose = () => {
     setEditImageModalOpen(false);
@@ -56,11 +77,17 @@ const GalleryHome: React.FC = () => {
   };
 
   const handleEditImageSubmit = (imageId: string, response: any) => {
+    const updatedImage = response.data.data;
+
     setImages((prevImages: any) =>
-      prevImages._id === imageId ? response.data.data : prevImages
+      prevImages.map((image: any) =>
+        image._id === imageId ? { ...image, ...updatedImage } : image
+      )
     );
+
     toast.success("Image edited successfully");
   };
+
 
   const onDelete = (id: string) => {
     try {
@@ -122,16 +149,26 @@ const GalleryHome: React.FC = () => {
     })
   );
 
-  const handleEdit = (e:any,image:any) => {
+  const handleEdit = (image: any) => {
     setEditImageModalOpen(true);
     setEditImage(image);
   }
   return (
     <>
       <div className="min-h-screen bg-gray-900 text-white">
-        <Navbar />
-        <main className="container mx-auto py-8">
-        <DndContext
+        <Navbar onUpload={onUpload} />
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-8  ">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="relative w-full h-64 bg-gray-200 rounded-lg animate-pulse">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-gray-300 rounded-lg w-32 h-32" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <main className="container mx-auto py-8">
+          <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
@@ -140,42 +177,37 @@ const GalleryHome: React.FC = () => {
               items={images.map((img: any) => img._id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                {images.map((image: any, index: number) => (
-                  <div key={image._id} className="  relative group">
-                    <SortableItem image={image} index={index} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {images.map((image, index) => (
+                  <>
+                    <div key={image._id} className="relative group">
+                      <SortableItem image={image} index={index} />
+                      <div className='absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50'>
+                        <button onClick={() => { handleEdit(image) }} className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition duration-300">
+                          <FiEdit
+                          />
+                        </button>
+                        <button
+                          onClick={() => onDelete(image._id)}
+                          className="p-2 bg-red-600 rounded-full hover:bg-red-700 transition duration-300"
+                        >
+                          <FiTrash2 />
+                        </button>
+                        <button
+                          onClick={() => openFullView(image)}
+                          className="p-2 bg-green-600 rounded-full hover:bg-green-700 transition duration-300"
+                        >
+                          <FiEye />
+                        </button>
 
-                    <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
-                      <button
-                        onClick={() => openFullView(image)}
-                        className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors duration-200"
-                        title="View"
-                      >
-                        <HiEye className="w-5 h-5 text-white" />
-                      </button>
-                      <button
-                        onClick={(e) =>
-                          handleEdit(e, image)
-                        }
-                        className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors duration-200"
-                        title="Edit"
-                      >
-                        <HiPencil className="w-5 h-5 text-white" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(image._id)}
-                        className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors duration-200"
-                        title="Delete"
-                      >
-                        <HiTrash className="w-5 h-5 text-white" />
-                      </button>
+                      </div>
                     </div>
-                  </div>
+                  </>
                 ))}
               </div>
             </SortableContext>
           </DndContext>
-        </main>
+        </main>}
 
         {selectedImage && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">

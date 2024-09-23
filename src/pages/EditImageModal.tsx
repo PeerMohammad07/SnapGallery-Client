@@ -8,11 +8,11 @@ interface ImageUploadModalUIProps {
   open: boolean;
   onClose: () => void;
   onUpload: any
-  image : {
-    _id:string,
-    image : string
-    title : string
-  }|any
+  image: {
+    _id: string,
+    image: string
+    title: string
+  } | any
 }
 
 const ImageUploadModalUI: React.FC<ImageUploadModalUIProps> = ({ open, onClose, onUpload, image }) => {
@@ -67,11 +67,11 @@ const ImageUploadModalUI: React.FC<ImageUploadModalUIProps> = ({ open, onClose, 
         return;
       }
 
-      formData.append('imageId',image._id)
+      formData.append('imageId', image._id)
       formData.append('userId', user._id);
       const response = await editImage(formData);
       setAddImageLoading(false);
-      onUpload(image._id,response);
+      onUpload(image._id, response);
       onClose();
     } catch (error) {
       setAddImageLoading(false);
@@ -96,14 +96,14 @@ const ImageUploadModalUI: React.FC<ImageUploadModalUIProps> = ({ open, onClose, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-4/12 p-6 relative">
+      <div className="bg-gray-800 rounded-lg shadow-lg w-4/12 p-6 relative">
         <button
           className="absolute top-4 right-4 text-2xl text-gray-600 hover:text-gray-800"
           onClick={onClose}
         >
           <FiX />
         </button>
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+        <h2 className="text-2xl font-bold mb-6 text-center text-white">
           {image.image ? "Edit Image" : "Add Image"}
         </h2>
         {error && (
@@ -129,19 +129,20 @@ const ImageUploadModalUI: React.FC<ImageUploadModalUIProps> = ({ open, onClose, 
           value={imageName}
           onChange={(e) => setImageName(e.target.value)}
           placeholder="Enter name"
-          className="w-full p-2 border text-black border-gray-300 rounded"
+          className="w-full p-2 border text-black bg-gray-100 border-gray-300 rounded mb-4"
         />
-        <div className="mt-4 w-full">
-          <button
-            className="bg-gray-700 hover:bg-gray-800 text-white py-2 rounded-lg transition"
-            onClick={onUploadImage}
-            disabled={addImageLoading}
-          >
-            {addImageLoading ? "Uploading..." : "Upload Image"}
-          </button>
-        </div>
+       <div className="mt-4 w-full flex justify-center">
+      <button
+        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg w-full transition duration-300"
+        onClick={onUploadImage}
+        disabled={addImageLoading}
+      >
+        {addImageLoading ? "Uploading..." : "Upload Image"}
+      </button>
+    </div>
       </div>
     </div>
+
   );
 };
 

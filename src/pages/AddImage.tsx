@@ -64,6 +64,11 @@ const ImageUploadModalUI: React.FC<ImageUploadModalUIProps> = ({ open, onClose, 
 
     formData.append('userId',user._id)
     const response = await uploadImages(formData);
+
+    setSelectedImages([]);
+    setSelectedFiles([]);
+    setImageNames([]);
+
     setAddImageLoading(false)
     onUpload(response)
     onClose();
@@ -122,14 +127,14 @@ const ImageUploadModalUI: React.FC<ImageUploadModalUIProps> = ({ open, onClose, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-4/12 p-6 relative">
+      <div className="bg-gray-800 rounded-lg shadow-lg w-4/12 p-6 relative">
         <button
           className="absolute top-4 right-4 text-2xl text-gray-600 hover:text-gray-800"
           onClick={onClose}
         >
           <FiX />
         </button>
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+        <h2 className="text-2xl font-bold mb-6 text-center text-white">
           Add Images
         </h2>
         {error && (

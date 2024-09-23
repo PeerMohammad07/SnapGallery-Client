@@ -9,7 +9,11 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import ImageUploadModalUI from './AddImage';
 
-const Navbar: React.FC = () => {
+interface NavBarProps {
+  onUpload : any
+}
+
+const Navbar: React.FC<NavBarProps> = ({onUpload}) => {
   const user = useSelector((prevState: rootState) => prevState.user.userData);
   const dispatch = useDispatch();
   const navigate = useNavigate()
@@ -25,17 +29,7 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const onUpload = (response:any)=>{
-    try {
-      if(response.data.status){
-        toast.success(response.data.message)
-      }else{
-        toast.error(response.data.message)
-      }
-    } catch (error) {
-      
-    }
-  }
+
 
   const onClose = ()=>{
     setIsAddImageModalOpen(false)
